@@ -1,4 +1,4 @@
-import { JsonController, Get, Post, HttpCode, Body, Put, Param, NotFoundError } from 'routing-controllers';
+import { JsonController, Get, Post, HttpCode, Body, Put, Param, NotFoundError, OnUndefined } from 'routing-controllers';
 import Game from './entities';
 
 @JsonController()
@@ -35,15 +35,22 @@ export default class MainController {
     return game.save()
   }
 
-  @Get('/games/:id')
-  async getGame(
-    @Param('id') id: number
-  ): Promise<Game | undefined> {
-    return await Game.findOne(id)
-  }
+  // @Get('/games/:id')
+  // async getGame(
+  //   @Param('id') id: number
+  // ): Promise<Game | undefined> {
+  //   return await Game.findOne(id)
+  // }
+
+  moves = (board1, board2) => 
+  board1
+    .map((row, y) => row.filter((cell, x) => board2[y][x] !== cell))
+    .reduce((a, b) => a.concat(b))
+    .length
 
 
   @Put('/games/:id')
+  @OnUndefined(400)
   async updateGame(
     @Param('id') id: number,
     @Body() update: Partial<Game>
@@ -57,6 +64,12 @@ export default class MainController {
         console.log("changing the id is not allowed")
         delete update.id
       }
+      if(Object.keys(update).includes('board')){
+        if(this.moves(game.board, update.board)>1){
+          return undefined
+        }      
+      }
+    
       let newColor = this.newColor()
       while (newColor===game.color){
         newColor = this.newColor()
