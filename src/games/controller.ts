@@ -11,7 +11,6 @@ export default class MainController {
 
   newColor = () => {
     const random = Math.floor(Math.random() * 5)
-    console.log(random)
     switch (random) {
       case 0:
         return "red"
@@ -49,8 +48,8 @@ export default class MainController {
     @Param('id') id: number,
     @Body() update: Partial<Game>
   ) {
+
     const game = await Game.findOne(id)
-    console.log(`Incoming PUT body param:`, update)
     if (!game) {
       throw new NotFoundError('Cannot find page')
     } else {
@@ -58,6 +57,12 @@ export default class MainController {
         console.log("changing the id is not allowed")
         delete update.id
       }
+      let newColor = this.newColor()
+      while (newColor===game.color){
+        newColor = this.newColor()
+      }
+      update.color = newColor 
+
       return Game.merge(game, update).save()
     }
   }
